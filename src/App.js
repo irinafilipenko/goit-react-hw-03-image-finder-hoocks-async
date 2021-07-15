@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { useState, useEffect } from 'react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { onErrorToast } from './Components/ToastError'
@@ -20,56 +20,50 @@ const Status = {
   REJECTED: 'rejected',
 }
 
-export class App extends Component {
-  state = {
-    pictureName: null,
-    pictures: [],
-    status: Status.IDLE,
-    page: 1,
-    largeImageURL: null,
-    imgTags: '',
-    loader: false,
+export function App() {
+  const [pictureName, setPictureName] = useState(null)
+  const [pictures, setPictures] = useState([])
+  const [status, setStatus] = useState(Status.IDLE)
+  const [page, setPage] = useState(1)
+  const [largeImageURL, setLargeImageURL] = useState(null)
+  const [imgTags, setImgTags] = useState('')
+  const [loader, setLoader] = useState(false)
+
+  function onModalClose() {
+    setLargeImageURL(null)
   }
 
-  onModalClose = () => {
-    this.setState({ largeImageURL: null })
+  function hideLoaderInModal() {
+    setLoader(false)
+  }
+  function handleImageClick(largeImageURL, imgTags) {
+    setLargeImageURL(largeImageURL)
+    setImgTags(imgTags)
+    setLoader(true)
   }
 
-  hideLoaderInModal = () => this.setState({ loader: false })
+  function handleFormSubmit(pictureName) {
+    // const pictureQuery = this.state.pictureName === pictureName
 
-  handleImageClick = (largeImageURL, imgTags) => {
-    this.setState({ largeImageURL, imgTags, loader: true })
-  }
-
-  handleFormSubmit = (pictureName) => {
-    const pictureQuery = this.state.pictureName === pictureName
-
-    if (pictureQuery) {
-      return
-    }
+    // if (pictureQuery) {
+    //   return
+    // }
     if (pictureName.trim() === '') {
       onErrorToast()
       return
     }
 
-    this.resetState()
-    this.setState({ pictureName })
+    resetState()
+    setPictureName(pictureName)
   }
 
-  handleNameChange = (pictureName) => {
-    this.setState({ pictureName })
+  function resetState() {
+    setPictureName(null)
+    setPage(1)
+    setPictures([])
+    setStatus(Status.IDLE)
   }
-
-  resetState = () => {
-    this.setState({
-      pictureName: null,
-      page: 1,
-      pictures: [],
-      status: Status.IDLE,
-    })
-  }
-
-  scrollPageToEnd = () => {
+  function scrollPageToEnd() {
     setTimeout(() => {
       window.scrollBy({
         top: document.documentElement.scrollHeight,
@@ -78,83 +72,66 @@ export class App extends Component {
     }, 1000)
   }
 
-  onLoadMoreBtn = () => {
-    this.setState((prevState) => ({
-      page: prevState.page + 1,
-    }))
+  function onLoadMoreBtn() {
+    setPage((page) => page + 1)
   }
 
-  async onFetchPictures() {
-    const { pictureName, page } = this.state
-    try {
-      const pictures = await fetchPictures(pictureName, page)
+  useEffect(() => {
+    if (!pictureName) {
+      return
+    }
+    setStatus(Status.PENDING)
 
-      if (pictures.length === 0) {
-        throw new Error()
+    async function onFetchPictures() {
+      try {
+        const pictures = await fetchPictures(pictureName, page)
+
+        if (pictures.length === 0) {
+          throw new Error()
+        }
+
+        setPictures((state) => [...state, ...pictures])
+        setStatus(Status.RESOLVED)
+      } catch (error) {
+        setStatus(Status.REJECTED)
+        onErrorToast()
       }
-
-      this.setState((prevState) => ({
-        pictures: [...prevState.pictures, ...pictures],
-
-        status: Status.RESOLVED,
-      }))
-    } catch (error) {
-      this.setState({ status: Status.REJECTED })
-      onErrorToast()
     }
-  }
+    setTimeout(() => {
+      onFetchPictures()
+    }, 500)
 
-  componentDidUpdate(_, prevState) {
-    const { pictureName, page } = this.state
-    const shouldFetch =
-      prevState.pictureName !== pictureName || prevState.page !== page
-
-    if (shouldFetch) {
-      this.setState({ status: Status.PENDING })
-      this.onFetchPictures()
-    }
     if (page > 1) {
-      this.scrollPageToEnd()
+      scrollPageToEnd()
     }
-  }
+  }, [page, pictureName])
 
-  render() {
-    const { pictures, status, largeImageURL, imgTags, loader } = this.state
+  const showImageList = pictures.length > 0
 
-    const showImageList = pictures.length > 0
+  return (
+    <Container>
+      <ToastContainer autoClose={4000} />
 
-    return (
-      <Container>
-        <ToastContainer autoClose={4000} />
+      <SearchBar onSearch={handleFormSubmit} />
+      {status === Status.IDLE && (
+        <>
+          <img src={image} width="1600" alt="question" className={s.image} />
+        </>
+      )}
+      {status === Status.PENDING && <GalleryLoader />}
 
-        <SearchBar onSearch={this.handleFormSubmit} />
-        {status === Status.IDLE && (
-          <>
-            <img src={image} width="1600" alt="question" className={s.image} />
-          </>
-        )}
-        {status === Status.PENDING && <GalleryLoader />}
-
-        {status === Status.RESOLVED && (
-          <ImageGallery
-            pictures={pictures}
-            handleImageClick={this.handleImageClick}
-          />
-        )}
-        {showImageList && (
-          <Button onClick={this.onLoadMoreBtn} aria-label="add contact" />
-        )}
-        {largeImageURL && (
-          <Modal onClose={this.onModalClose}>
-            {loader && <ModalLoader />}
-            <img
-              src={largeImageURL}
-              alt={imgTags}
-              onLoad={this.hideLoaderInModal}
-            />
-          </Modal>
-        )}
-      </Container>
-    )
-  }
+      {status === Status.RESOLVED && (
+        <ImageGallery pictures={pictures} handleImageClick={handleImageClick} />
+      )}
+      {showImageList && (
+        <Button onClick={onLoadMoreBtn} aria-label="add contact" />
+      )}
+      {largeImageURL && (
+        <Modal onClose={onModalClose}>
+          {loader && <ModalLoader />}
+          <img src={largeImageURL} alt={imgTags} onLoad={hideLoaderInModal} />
+        </Modal>
+      )}
+    </Container>
+  )
 }

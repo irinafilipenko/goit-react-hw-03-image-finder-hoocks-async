@@ -22,7 +22,7 @@ export const SearchBar = ({ onSearch }) => {
           autoComplete="off"
           autoFocus
           name="pictureName"
-          //   value={this.state.pictureName}
+          //  value={this.state.pictureName}
           placeholder="Search images and photos"
           //   onChange={this.handleNameChange}
         />
