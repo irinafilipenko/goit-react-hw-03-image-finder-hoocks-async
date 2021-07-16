@@ -1,8 +1,14 @@
 .loader {
-  /* margin: 200px 50%; */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: calc(100vh - 80px);
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1200;
+  display: flex;
+  justify-content: center;
 }

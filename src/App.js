@@ -43,11 +43,6 @@ export function App() {
   }
 
   function handleFormSubmit(pictureName) {
-    // const pictureQuery = this.state.pictureName === pictureName
-
-    // if (pictureQuery) {
-    //   return
-    // }
     if (pictureName.trim() === '') {
       onErrorToast()
       return
@@ -61,8 +56,8 @@ export function App() {
     setPictureName(null)
     setPage(1)
     setPictures([])
-    setStatus(Status.IDLE)
   }
+
   function scrollPageToEnd() {
     setTimeout(() => {
       window.scrollBy({
@@ -92,18 +87,18 @@ export function App() {
 
         setPictures((state) => [...state, ...pictures])
         setStatus(Status.RESOLVED)
+        if (page !== 1) {
+          scrollPageToEnd()
+        }
       } catch (error) {
         setStatus(Status.REJECTED)
         onErrorToast()
       }
     }
+
     setTimeout(() => {
       onFetchPictures()
     }, 500)
-
-    if (page > 1) {
-      scrollPageToEnd()
-    }
   }, [page, pictureName])
 
   const showImageList = pictures.length > 0
@@ -111,7 +106,6 @@ export function App() {
   return (
     <Container>
       <ToastContainer autoClose={4000} />
-
       <SearchBar onSearch={handleFormSubmit} />
       {status === Status.IDLE && (
         <>
@@ -120,10 +114,8 @@ export function App() {
       )}
       {status === Status.PENDING && <GalleryLoader />}
 
-      {status === Status.RESOLVED && (
-        <ImageGallery pictures={pictures} handleImageClick={handleImageClick} />
-      )}
-      {showImageList && (
+      <ImageGallery pictures={pictures} handleImageClick={handleImageClick} />
+      {showImageList && status === Status.RESOLVED && (
         <Button onClick={onLoadMoreBtn} aria-label="add contact" />
       )}
       {largeImageURL && (

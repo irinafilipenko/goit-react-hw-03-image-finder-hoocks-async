@@ -21,7 +21,7 @@ export const ImageGallery = ({ pictures, handleImageClick }) => {
 ImageGallery.propTypes = {
   pictures: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
+      id: PropTypes.number.isRequired,
       webformatURL: PropTypes.string.isRequired,
       largeImageURL: PropTypes.string.isRequired,
       tags: PropTypes.string.isRequired,
