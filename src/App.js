@@ -58,15 +58,6 @@ export function App() {
     setPictures([])
   }
 
-  function scrollPageToEnd() {
-    setTimeout(() => {
-      window.scrollBy({
-        top: document.documentElement.scrollHeight,
-        behavior: 'smooth',
-      })
-    }, 1000)
-  }
-
   function onLoadMoreBtn() {
     setPage((page) => page + 1)
   }
@@ -87,9 +78,6 @@ export function App() {
 
         setPictures((state) => [...state, ...pictures])
         setStatus(Status.RESOLVED)
-        if (page !== 1) {
-          scrollPageToEnd()
-        }
       } catch (error) {
         setStatus(Status.REJECTED)
         onErrorToast()
@@ -101,6 +89,21 @@ export function App() {
     }, 500)
   }, [page, pictureName])
 
+  useEffect(() => {
+    function scrollPageToEnd() {
+      setTimeout(() => {
+        window.scrollBy({
+          top: document.documentElement.scrollHeight,
+          behavior: 'smooth',
+        })
+      }, 1000)
+    }
+
+    if (page > 1) {
+      scrollPageToEnd()
+    }
+  }, [pictures, page])
+
   const showImageList = pictures.length > 0
 
   return (
@@ -109,7 +112,7 @@ export function App() {
       <SearchBar onSearch={handleFormSubmit} />
       {status === Status.IDLE && (
         <>
-          <img src={image} width="1600" alt="question" className={s.image} />
+          <img src={image} width="1200" alt="question" className={s.image} />
         </>
       )}
       {status === Status.PENDING && <GalleryLoader />}
